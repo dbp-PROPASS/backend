@@ -1,13 +1,7 @@
-const express = require('express');
+const oracledb = require('oracledb');
 const {getConnection} = require('../config/dbConfig'); // DB 설정 파일 경로
 
-const router = express.Router();
-const communityController = require('../controllers/communityController');
-
-router.get('/posts', communityController.community)
-
-// 게시글 조회 API
-router.get('/posts', async (req, res) => {
+const community = async (req, res) => {
   const { category } = req.query;
 
   const categoryToComId = {
@@ -55,6 +49,6 @@ router.get('/posts', async (req, res) => {
       }
     }
   }
-});
+};
 
-module.exports = router;
+module.exports = {community};
