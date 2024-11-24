@@ -1,31 +1,19 @@
-const { getConnection } = require('../config/dbConfig');
+const MemberDAO = require('../models/loginModel'); // 모델 불러오기
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  let connection;
 
   try {
-    connection = await getConnection();
+    // 모델에서 사용자 정보 가져오기
+    const user = await MemberDAO.getUserByEmail(email);
 
-    // 이메일로 사용자 조회
-    const query = `
-      SELECT NAME, PASSWORD 
-      FROM MEMBER 
-      WHERE TRIM(EMAIL) = TRIM(:email)
-    `;
-    const result = await connection.execute(query, { email });
-
-    // console.log("Received Email:", email);
-    // console.log("Executed Query:", query);
-    // console.log("Binds:", { email });
-
-    if (result.rows.length === 0) {
+    // 사용자 정보가 없으면 에러 응답
+    if (user.length === 0) {
       return res.json({ success: false, message: '등록되지 않은 이메일입니다.' });
     }
 
     // DB 쿼리 결과에서 이름(name)과 비밀번호(dbPassword) 값을 각각 변수에 할당
-    const [name, dbPassword] = result.rows[0];
-    // 이름, 비밀번호의 공백을 제거
+    const [name, dbPassword] = user[0];
     const trimmedName = name.trim();
     const trimmedPassword = dbPassword.trim();
 
@@ -36,12 +24,8 @@ const login = async (req, res) => {
       return res.json({ success: false, message: '비밀번호가 잘못되었습니다.' });
     }
   } catch (err) {
-    console.error('Database Error:', err);
+    console.error('Login Error:', err);
     return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
-  } finally {
-    if (connection) {
-      await connection.close();
-    }
   }
 };
 
