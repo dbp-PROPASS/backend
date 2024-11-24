@@ -36,7 +36,7 @@ app.get('/api/posts', async (req, res) => {
     english: '3',
     finance: '4',
   };
-  const comId = categoryToComId[category]; // category에 해당하는 COM_ID 매핑
+  const comId = String(categoryToComId[category]); // 명시적으로 문자열 변환  
 
   if (!comId) {
     return res.status(400).json({ error: 'Invalid category' });
@@ -51,11 +51,10 @@ app.get('/api/posts', async (req, res) => {
       SELECT p.POST_ID, p.POST_TITLE, p.POST_CONTENT, p.MEM_ID
       FROM COMMUNITYPOST p
       JOIN COMMUNITY c ON p.COM_ID = c.COM_ID
-      WHERE p.COM_ID = :comId
+      WHERE TRIM(p.COM_ID) = :comId
       ORDER BY p.POST_ID DESC
     `;
-
-    const result = await connection.execute(query, { comId });
+    const result = await connection.execute(query, { comId: String(comId) });
 
     res.json(
       result.rows.map((row) => ({
