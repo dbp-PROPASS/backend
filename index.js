@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 5000;
 
 // CORS 설정
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
+  origin: 'http://localhost:3000', // 프론트엔드 URL
+  credentials: true // 쿠키와 자격 증명 정보를 허용
 }));
 
 app.use(cookieParser());
@@ -22,9 +22,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // 라우터 설정
-app.use('/api/auth', loginRoutes);
-app.use('/api/account', deleteUserRoutes);
-app.use('/api', signUpRoutes);
+app.use('/api/auth', loginRoutes); // 로그인 관련 API
+app.use('/api/account', deleteUserRoutes);  // 회원탈퇴 관련 API
+app.use('/api', signUpRoutes);  // 회원가입 관련 API
 app.use('/api', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 
