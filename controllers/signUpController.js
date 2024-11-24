@@ -13,7 +13,16 @@ const generateRandomNickname = () => {
 
 // 회원가입 처리
 const signUp = async (req, res) => {
-  const { name, email, password, age_group, phone, interests, notification } = req.body;
+  let { name, email, password, age_group, phone, interests, notification } = req.body;
+
+  // 입력값 trim 처리
+  name = name ? name.trim() : '';
+  email = email ? email.trim() : '';
+  password = password ? password.trim() : '';
+  age_group = age_group ? age_group.trim() : '';
+  phone = phone ? phone.trim() : '';
+  interests = interests ? interests.trim() : '';
+  notification = notification ? notification.trim() : '';
 
   // 닉네임 기본값 생성
   const nickname = req.body.nickname || generateRandomNickname();
