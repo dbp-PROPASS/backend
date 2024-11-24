@@ -1,19 +1,25 @@
 const oracledb = require('oracledb');
+const dbConfig = require('../config/dbConfig');
 
 class ScheduleDAO {
   static async loadScheduleData(email) {
     let connection;
     try {
-      connection = await oracledb.getConnection();
+      connection = await oracledb.getConnection(dbConfig);
 
       // 1. 이메일로 사용자 ID 조회
       const userQuery = `
-        SELECT MEM_ID FROM MEMBER
-        WHERE EMAIL = :email
+        SELECT MEM_ID
+        FROM MEMBER
+        WHERE TRIM(EMAIL) = TRIM(:email)
       `;
       const userResult = await connection.execute(userQuery, [email]);
-      const memId = userResult.rows[0]?.MEM_ID;
-      if (!memId) {
+      console.log("Received Email:", email);
+
+      const [memId] = userResult.rows[0];
+      const trimmedMemId = memId.trim();
+      console.log("Received memId:", trimmedMemId)
+      if (!trimmedMemId) {
         throw new Error('사용자를 찾을 수 없습니다.');
       }
 
@@ -21,14 +27,17 @@ class ScheduleDAO {
       const certQuery = `
         SELECT ACQISITION_DATE, CERT_ID
         FROM OWNCERTIFICATE
-        WHERE MEM_ID = :memId
+        WHERE TRIM(MEM_ID) = TRIM(:memId)
       `;
-      const certResult = await connection.execute(certQuery, [memId]);
+      const certResult = await connection.execute(certQuery, [trimmedMemId]);
 
       const schedules = [];
-      for (const cert of certResult.rows) {
-        const { CERT_ID } = cert;
 
+      for (const cert of certResult.rows) {
+        const [ACQISITION_DATE, CERT_ID] = cert;
+        const trimmedCERT_ID = CERT_ID.trim();
+        
+        console.log("Received CERT_ID:", trimmedCERT_ID);
         // 3. CERT_ID로 CERT_NAME 데이터 조회
         const nameQuery = `
           SELECT CERT_NAME
