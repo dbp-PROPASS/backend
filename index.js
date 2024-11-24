@@ -4,12 +4,17 @@ const cors = require('cors');
 const loginRoutes = require('./routes/loginRoutes');  // 로그인 라우터
 const deleteUserRoutes = require('./routes/deleteUserRoutes');  // 회원탈퇴 라우터
 const signUpRoutes = require('./routes/signUpRoutes');  // 회원가입 라우터
-const scheduleRoutes = require('../routes/scheduleRoutes'); 
+const scheduleRoutes = require('./routes/scheduleRoutes'); 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS 설정
+app.use(cors({
+  origin: 'http://localhost:3000', // 프론트엔드 URL
+  credentials: true // 쿠키와 자격 증명 정보를 허용
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
