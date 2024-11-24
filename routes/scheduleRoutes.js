@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const scheduleController = require('../controllers/ScheduleController'); // 대소문자 일치
+const scheduleController = require('../controllers/scheduleController'); // 대소문자 일치
 
 // 쿠키에서 rememberEmail 값을 읽고 ScheduleController로 전달
 router.post('/schedule', (req, res) => {
