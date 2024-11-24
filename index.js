@@ -1,22 +1,37 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const loginRoutes = require('./routes/loginRoutes');  // 로그인 라우터
-const deleteUserRoutes = require('./routes/deleteUserRoutes');  // 회원탈퇴 라우터
-const certificateListRoutes = require('./routes/certificateListRoutes');
+const cookieParser = require('cookie-parser');
+const loginRoutes = require('./routes/loginRoutes');  
+const deleteUserRoutes = require('./routes/deleteUserRoutes');
+const signUpRoutes = require('./routes/signUpRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const communityRoutes = require('./routes/communityRoutes'); // 추가된 라우터
+const certificateListRouter = require('./routes/certificateListRoutes');
 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// CORS 설정
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
+
+app.use(cookieParser());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/api/certificate', certificateListRoutes); //자격증 리스트 관련 API
-app.use('/api/auth', loginRoutes);  // 로그인 관련 API
-app.use('/api/account', deleteUserRoutes);  // 회원탈퇴 관련 API
+// 라우터 설정
+app.use('/api/auth', loginRoutes);
+app.use('/api/account', deleteUserRoutes);
+app.use('/api', signUpRoutes);
+app.use('/api', scheduleRoutes);
+app.use('/api', communityRoutes); // Community API 추가
+app.use('/api/certificate', certificateListRouter);
 
-
+// 서버 실행
 app.listen(PORT, () => {
   console.log(`서버가 ${PORT}번 포트에서 실행 중...`);
 });
