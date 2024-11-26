@@ -75,8 +75,8 @@ const createPost = async (req, res) => {
     connection = await getConnection();
 
     const query = `
-      INSERT INTO COMMUNITYPOST (POST_ID, POST_TITLE, POST_CONTENT, MEM_ID, COM_ID, CREATED_AT)
-      VALUES (COMMUNITYPOST_SEQ.NEXTVAL, :title, :content, :author, :comId, SYSDATE)
+      INSERT INTO COMMUNITYPOST (POST_ID, POST_TITLE, POST_CONTENT, MEM_ID, COM_ID)
+      VALUES (COMMUNITYPOST_SEQ.NEXTVAL, :title, :content, :author, :comId)
     `;
     console.log('Executing query with:', { title, content, author, comId });
 
