@@ -27,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', loginRoutes); // 로그인 관련 API
 app.use('/api/account', deleteUserRoutes);  // 회원탈퇴 관련 API
 app.use('/api', signUpRoutes);  // 회원가입 관련 API
-app.use('/api', scheduleRoutes);
+app.use('/api/schedule', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 app.use('/api/certificate', certificateListRouter);
 
