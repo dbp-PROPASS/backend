@@ -51,4 +51,52 @@ const community = async (req, res) => {
   }
 };
 
-module.exports = {community};
+
+// 게시글 작성 함수
+
+const createPost = async (req, res) => {
+  const { title, content, author, category } = req.body;
+
+  const categoryToComId = {
+    it: '2',
+    english: '3',
+    finance: '4',
+  };
+  const comId = String(categoryToComId[category]); // 카테고리를 COM_ID로 매핑
+
+  if (!title || !content || !author || !comId) {
+    console.error('Invalid request data:', { title, content, author, category });
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    const query = `
+      INSERT INTO COMMUNITYPOST (POST_ID, POST_TITLE, POST_CONTENT, MEM_ID, COM_ID, CREATED_AT)
+      VALUES (COMMUNITYPOST_SEQ.NEXTVAL, :title, :content, :author, :comId, SYSDATE)
+    `;
+    console.log('Executing query with:', { title, content, author, comId });
+
+    await connection.execute(query, { title, content, author, comId });
+    await connection.commit(); // 수동 커밋
+
+    res.status(201).json({ message: 'Post created successfully' });
+  } catch (error) {
+    console.error('Error creating post:', error);
+    res.status(500).json({ error: 'Failed to create post' });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection:', err);
+      }
+    }
+  }
+};
+
+
+module.exports = {community, createPost};
