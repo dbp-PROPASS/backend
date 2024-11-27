@@ -6,7 +6,7 @@ const insertPost = async (postData) => { // 함수명 수정
   const { title, content, author, comId } = postData;
   const query = `
     INSERT INTO COMMUNITYPOST (POST_ID, POST_TITLE, POST_CONTENT, MEM_ID, COM_ID)
-    VALUES (COMMUNITYPOST_SEQ.NEXTVAL, :title, :content, :author, :comId)
+    VALUES (POSTING_SEQ.NEXTVAL, :title, :content, :author, :comId)
   `;
   const binds = {
     title, 
