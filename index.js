@@ -5,10 +5,10 @@ const cookieParser = require('cookie-parser');
 const loginRoutes = require('./routes/loginRoutes');  
 const deleteUserRoutes = require('./routes/deleteUserRoutes');
 const signUpRoutes = require('./routes/signUpRoutes');
+const AddPostsRoutes = require('./routes/AddPostsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const communityRoutes = require('./routes/communityRoutes'); // 추가된 라우터
 const certificateListRouter = require('./routes/certificateListRoutes');
-
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', loginRoutes); // 로그인 관련 API
 app.use('/api/account', deleteUserRoutes);  // 회원탈퇴 관련 API
 app.use('/api', signUpRoutes);  // 회원가입 관련 API
+app.use('/api', AddPostsRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 app.use('/api/certificate', certificateListRouter);
@@ -35,3 +36,5 @@ app.use('/api/certificate', certificateListRouter);
 app.listen(PORT, () => {
   console.log(`서버가 ${PORT}번 포트에서 실행 중...`);
 });
+
+
