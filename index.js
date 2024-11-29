@@ -6,9 +6,10 @@ const loginRoutes = require('./routes/loginRoutes');
 const deleteUserRoutes = require('./routes/deleteUserRoutes');
 const signUpRoutes = require('./routes/signUpRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
-const communityRoutes = require('./routes/communityRoutes'); // 추가된 라우터
+const communityRoutes = require('./routes/communityRoutes');
 const certificateListRouter = require('./routes/certificateListRoutes');
 const findPasswordRoutes = require('./routes/findPasswordRoutes');
+const editProfileRoutes = require('./routes/editProfileRoutes'); 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use('/api/schedule', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 app.use('/api/certificate', certificateListRouter);
 app.use('/api/password', findPasswordRoutes);
+app.use('/api/users', editProfileRoutes);
 
 // 서버 실행
 app.listen(PORT, () => {
