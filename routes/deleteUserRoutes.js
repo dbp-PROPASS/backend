@@ -1,8 +1,8 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const deleteUserController = require("../controllers/deleteUserController");
+const accountController = require('../controllers/deleteUserController');
 
-// 회원 탈퇴 요청 처리
-router.delete("/:email", deleteUserController.deleteUser);
+// 회원 탈퇴
+router.delete('/:email', accountController.deleteUserController);
 
 module.exports = router;
