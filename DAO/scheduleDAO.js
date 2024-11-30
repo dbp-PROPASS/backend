@@ -1,39 +1,18 @@
 const { getConnection } = require('../config/dbConfig'); // DB 설정 파일 경로
 
-class scheduleDAO {
+class ScheduleDAO {
   static async loadSchedule(email) {
     let connection;
-
     try {
-      // DB 연결
       connection = await getConnection();
 
-      // 1. 이메일로 사용자 ID 조회
-      const userQuery = `
-        SELECT MEM_ID
-        FROM MEMBER
-        WHERE TRIM(EMAIL) = TRIM(:email)
-      `;
-      const userResult = await connection.execute(userQuery, [email]);
+      const memId = await ScheduleDAO.getMemberIdByEmail(email, connection);
+      if (!memId) throw new Error('사용자를 찾을 수 없습니다.');
 
-      if (!userResult.rows.length) {
-        throw new Error('사용자를 찾을 수 없습니다.');
-      }
+      const ownSchedules = await ScheduleDAO.loadOwnCertifi(memId, connection);
+      const interestSchedules = await ScheduleDAO.loadInterestCertifi(memId, connection);
 
-      const [memId] = userResult.rows[0]; //사용자 id
-      const trimmedMemId = memId.trim(); // 공백 제거
-      console.log("Received memId:", trimmedMemId);
-
-      // OWNCERTIFICATE 데이터 조회
-      const ownSchedules = await scheduleDAO.loadOwnCertifi(trimmedMemId);
-
-      // INTERESTED_CERTIFICATE 데이터 조회
-      const interestSchedules = await scheduleDAO.loadInterestCertifi(trimmedMemId);
-
-      // 두 데이터를 합침
-      const schedules = [...ownSchedules, ...interestSchedules];
-
-      return schedules; // 프론트엔드로 반환할 데이터
+      return [...ownSchedules, ...interestSchedules];
     } catch (err) {
       console.error('DB 오류:', err.message);
       throw err;
@@ -44,196 +23,111 @@ class scheduleDAO {
     }
   }
 
-  static async loadOwnCertifi(memId) {
-    let connection;
-    try {
-      // DB 연결
-      connection = await getConnection();
+  static async getMemberIdByEmail(email, connection) {
+    const query = `
+      SELECT MEM_ID
+      FROM MEMBER
+      WHERE TRIM(EMAIL) = TRIM(:email)
+    `;
+    const result = await connection.execute(query, [email]);
+    return result.rows.length ? result.rows[0][0].trim() : null;
+  }
 
-      // 1. 사용자 ID로 OWNCERTIFICATE 데이터 조회
-      const certQuery = `
-        SELECT ACQISITION_DATE, CERT_ID
-        FROM OWNCERTIFICATE
-        WHERE TRIM(MEM_ID) = TRIM(:memId)
-      `;
-      const certResult = await connection.execute(certQuery, [memId]);
+  static async loadOwnCertifi(memId, connection) {
+    const certQuery = `
+      SELECT ACQISITION_DATE, CERT_ID
+      FROM OWNCERTIFICATE
+      WHERE TRIM(MEM_ID) = TRIM(:memId)
+    `;
+    const certResult = await connection.execute(certQuery, [memId]);
+  
+    if (!certResult.rows.length) {
+      console.log('보유 자격증이 없습니다.');
+      return [];
+    }
+  
+    const certIds = certResult.rows.map(row => row[1]?.trim());
+    if (!certIds.length) return [];
+  
+    const certNameMap = await ScheduleDAO.getCertificateNames(certIds, connection);
+  
+    const schedules = [];
+    certResult.rows.forEach(([acquisitionDate, certId]) => {
+      const certName = certNameMap.get(certId?.trim()) || '알 수 없는 자격증';
+      schedules.push({ certName, date: acquisitionDate?.trim(), type: 'expired' });
+    });
+  
+    return schedules;
+  }  
 
-      if (!certResult.rows.length) {
-        console.log('보유 자격증이 없습니다.');
-        return []; // 보유 자격증이 없으면 빈 배열 반환
-      }
+  static async loadInterestCertifi(memId, connection) {
+    const roundQuery = `
+      SELECT ROUND_ID
+      FROM INTERESTCERT
+      WHERE TRIM(MEM_ID) = TRIM(:memId)
+    `;
+    const roundResult = await connection.execute(roundQuery, [memId]);
 
-      console.log("CERTIFICATE Rows:", certResult.rows);
+    if (!roundResult.rows.length) {
+      console.log('관심 자격증이 없습니다.');
+      return [];
+    }
 
-      // 2. 모든 자격증 정보를 한 번에 가져오기
-      const certIds = certResult.rows.map(row => row[1].trim()); // CERT_ID 리스트 생성(각 행 두번째 요소 추출)
-      console.log("CerNameRows:", certIds);
-      
-      // 바인딩 변수 생성
-      const placeholders = certIds.map((_, index) => `:certId${index}`).join(', ');
-      const params = certIds.reduce((acc, certId, index) => {
-        acc[`certId${index}`] = certId;
-        return acc;
-      }, {});
+    const roundIds = roundResult.rows.map(row => row[0]?.trim());
+    if (!roundIds.length) return [];
 
-      const nameQuery = `
+    const examQuery = `
+      SELECT ROUND_ID, RECEPTION_START_DATE, RECEPTION_FINISH_DATE, RESULT_DATE, EXAM_DATE, CERT_ID
+      FROM EXAMSCHEDULE
+      WHERE TRIM(ROUND_ID) IN (${roundIds.map((_, index) => `:roundId${index}`).join(', ')})
+    `;
+    const examResult = await connection.execute(
+      examQuery,
+      roundIds.reduce((acc, id, index) => ({ ...acc, [`roundId${index}`]: id }), {})
+    );
+
+    if (!examResult.rows.length) {
+      console.log('해당 회차 시험 스케줄이 없습니다.');
+      return [];
+    }
+
+    const certIds = examResult.rows.map(row => row[5]?.trim());
+    const certNameMap = await ScheduleDAO.getCertificateNames(certIds, connection);
+
+    const schedules = [];
+    examResult.rows.forEach(row => {
+      const [_, startDate, finishDate, resultDate, examDate, certId] = row;
+      const certName = certNameMap.get(certId?.trim()) || '알 수 없는 자격증';
+
+      schedules.push({ certName, date: startDate?.trim(), type: 'receiveStart' });
+      schedules.push({ certName, date: finishDate?.trim(), type: 'receiveEnd' });
+      schedules.push({ certName, date: resultDate?.trim(), type: 'results' });
+      schedules.push({ certName, date: examDate?.trim(), type: 'exam' });
+    });
+
+    return schedules;
+  }
+
+  static async getCertificateNames(certIds, connection) {
+    if (!certIds.length) return new Map();
+
+    const certQuery = `
       SELECT CERT_ID, CERT_NAME
       FROM CERTIFICATEINFO
-      WHERE TRIM(CERT_ID) IN (${placeholders})
-      `;  
-      console.log("Generated Query:", nameQuery);
-      console.log("Query Parameters:", params);
+      WHERE TRIM(CERT_ID) IN (${certIds.map((_, index) => `:certId${index}`).join(', ')})
+    `;
+    const certResult = await connection.execute(
+      certQuery,
+      certIds.reduce((acc, id, index) => ({ ...acc, [`certId${index}`]: id }), {})
+    );
 
-      const nameResult = await connection.execute(nameQuery, params);
+    const certNameMap = new Map();
+    certResult.rows.forEach(([certId, certName]) => {
+      certNameMap.set(certId?.trim(), certName?.trim());
+    });
 
-      console.log("CERTIFICATEINFO Rows:", nameResult.rows);
-
-      // CERT_ID -> CERT_NAME 매핑
-      const certNameMap = new Map();
-      nameResult.rows.forEach(([certId, certName]) => {
-      certNameMap.set(certId.trim(), certName.trim());
-      });
-      
-      console.log("CERT_ID to CERT_NAME mapping:", Array.from(certNameMap.entries()));
-
-
-      // 4. OWNCERTIFICATE 데이터와 CERTIFICATEINFO 데이터를 매핑
-      const schedules = certResult.rows.map(([acquisitionDate, certId]) => {
-        const certName = certNameMap.get(certId.trim()) || '알 수 없는 자격증';
-        return {
-          certName,
-          date: acquisitionDate.trim(),
-          type: 'expired'
-        };
-      });
-
-      console.log('Schedules to be returned:', schedules);
-
-      return schedules; // 프론트엔드로 반환할 데이터
-    } catch (err) {
-      console.error('DB 오류:', err.message);
-      throw err;
-    } finally {
-      if (connection) {
-        await connection.close();
-      }
-    }
+    return certNameMap;
   }
-
-  static async loadInterestCertifi(memId) {
-    let connection;
-    try {
-      // DB 연결
-      connection = await getConnection();
-  
-      // 1. 사용자 ID로 InterestCert 데이터 조회
-      const roundQuery = `
-        SELECT ROUND_ID
-        FROM INTERESTCERT
-        WHERE TRIM(MEM_ID) = TRIM(:memId)
-      `;
-      const roundResult = await connection.execute(roundQuery, [memId]);
-  
-      if (!roundResult.rows.length) {
-        console.log('관심 자격증이 없습니다.');
-        return []; // 관심 자격증이 없으면 빈 배열 반환
-      }
-  
-      const roundIds = roundResult.rows.map(row => row[0].trim()); // ROUND_ID 리스트 생성
-      console.log("ROUND_ID Rows:", roundIds);
-  
-      if (roundIds.length === 0) {
-        return []; // ROUND_ID가 없으면 빈 배열 반환
-      }
-  
-      // 바인딩 변수 생성
-      const roundPlaceholders = roundIds.map((_, index) => `:roundId${index}`).join(', ');
-      const roundParams = roundIds.reduce((acc, roundId, index) => {
-        acc[`roundId${index}`] = roundId;
-        return acc;
-      }, {});
-  
-      // 2. EXAMSCHEDULE에서 ROUND_ID로 데이터 조회
-      const examQuery = `
-        SELECT ROUND_ID, RECEPTION_START_DATE, RECEPTION_FINISH_DATE, CERT_ID
-        FROM EXAMSCHEDULE
-        WHERE TRIM(ROUND_ID) IN (${roundPlaceholders})
-      `;
-      const examResult = await connection.execute(examQuery, roundParams);
-  
-      if (!examResult.rows.length) {
-        console.log('해당 회차 시험 스케줄이 없습니다.');
-        return []; // EXAMSCHEDULE 데이터가 없으면 빈 배열 반환
-      }
-  
-      console.log("EXAMSCHEDULE Rows:", examResult.rows);
-  
-      // CERT_ID 리스트 생성
-      const certIds = examResult.rows.map(row => row[3].trim()); // CERT_ID 추출
-      const certPlaceholders = certIds.map((_, index) => `:certId${index}`).join(', ');
-      const certParams = certIds.reduce((acc, certId, index) => {
-        acc[`certId${index}`] = certId;
-        return acc;
-      }, {});
-  
-      // 3. CERTIFICATEINFO에서 CERT_ID로 CERT_NAME 조회
-      const certQuery = `
-        SELECT CERT_ID, CERT_NAME
-        FROM CERTIFICATEINFO
-        WHERE TRIM(CERT_ID) IN (${certPlaceholders})
-      `;
-      const certResult = await connection.execute(certQuery, certParams);
-  
-      if (!certResult.rows.length) {
-        console.log('CERTIFICATEINFO 데이터가 없습니다.');
-        return [];
-      }
-  
-      console.log("CERTIFICATEINFO Rows:", certResult.rows);
-  
-      // CERT_ID -> CERT_NAME 매핑
-      const certNameMap = new Map();
-      certResult.rows.forEach(([certId, certName]) => {
-        certNameMap.set(certId.trim(), certName.trim());
-      });
-  
-      console.log("CERT_ID to CERT_NAME Mapping:", Array.from(certNameMap.entries()));
-  
-      // 4. INTERESTCERT + EXAMSCHEDULE + CERTIFICATEINFO 데이터 매핑
-      const schedules = [];
-  
-      // RECEPTION_START_DATE로 매핑
-      examResult.rows.forEach(([roundId, startDate, finishDate, certId]) => {
-        const certName = certNameMap.get(certId.trim()) || '알 수 없는 자격증';
-        schedules.push({
-          certName,
-          date: startDate.trim(),
-          type: 'receiveStart',
-        });
-      });
-  
-      // RECEPTION_FINISH_DATE로 매핑
-      examResult.rows.forEach(([roundId, startDate, finishDate, certId]) => {
-        const certName = certNameMap.get(certId.trim()) || '알 수 없는 자격증';
-        schedules.push({
-          certName,
-          date: finishDate.trim(),
-          type: 'receiveEnd',
-        });
-      });
-  
-      console.log("Schedules to be returned:", schedules);
-  
-      return schedules;
-    } catch (err) {
-      console.error('DB 오류:', err.message);
-      throw err;
-    } finally {
-      if (connection) {
-        await connection.close();
-      }
-    }
-  }  
 }
 
-module.exports = scheduleDAO;
+module.exports = ScheduleDAO;
