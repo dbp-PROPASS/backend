@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const loginRoutes = require('./routes/loginRoutes');  
 const deleteUserRoutes = require('./routes/deleteUserRoutes');
 const signUpRoutes = require('./routes/signUpRoutes');
+const AddPostsRoutes = require('./routes/AddPostsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const certificateListRouter = require('./routes/certificateListRoutes');
@@ -28,6 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', loginRoutes); // 로그인 관련 API
 app.use('/api/account', deleteUserRoutes);  // 회원탈퇴 관련 API
 app.use('/api', signUpRoutes);  // 회원가입 관련 API
+app.use('/api', AddPostsRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 app.use('/api/certificate', certificateListRouter);
