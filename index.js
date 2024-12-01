@@ -13,6 +13,7 @@ const certificateInfoRoutes = require('./routes/certificateInfoRoutes');
 const findPasswordRoutes = require('./routes/findPasswordRoutes');
 const editProfileRoutes = require('./routes/editProfileRoutes'); 
 const bookmarkRoutes = require('./routes/bookMarkRoutes');
+const emailRoutes = require('./routes/emailVertificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.use('/api/certificate', certificateInfoRoutes);
 app.use('/api/password', findPasswordRoutes);
 app.use('/api/users', editProfileRoutes);
 app.use('/api/bookmark', bookmarkRoutes);
+app.use('/api/email', emailRoutes);
 
 // 서버 실행
 app.listen(PORT, () => {
