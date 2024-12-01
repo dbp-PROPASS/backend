@@ -1,21 +1,17 @@
-// 더미 데이터 (실제 프로젝트에서는 DB를 사용)
-const users = [
-    { id: 1, email: "test@example.com", password: "1234" },
-    { id: 2, email: "user@example.com", password: "abcd" }
-  ];
-  
-  // 회원 탈퇴 처리 함수
-  const deleteUser = (req, res) => {
-    const { email } = req.body;
-    const userIndex = users.findIndex((u) => u.email === email);
-  
-    if (userIndex !== -1) {
-      users.splice(userIndex, 1);  // 배열에서 사용자 삭제
-      return res.json({ success: true, message: "회원 탈퇴가 완료되었습니다." });
+const userModel = require('../models/deleteUserModel');
+
+exports.deleteUserController = async (req, res) => {
+  try {
+    const email = req.params.email; // URL에서 이메일 추출
+    const deleteResult = await userModel.deleteUserModel(email);
+
+    if (deleteResult) {
+      res.json({ success: true, message: '회원탈퇴가 완료되었습니다.' });
     } else {
-      return res.json({ success: false, message: "사용자를 찾을 수 없습니다." });
+      res.status(404).json({ success: false, message: '해당 이메일의 회원을 찾을 수 없습니다.' });
     }
-  };
-  
-  module.exports = { deleteUser };
-  
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '회원탈퇴 중 오류가 발생했습니다.' });
+  }
+};

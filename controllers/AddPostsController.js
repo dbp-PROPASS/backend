@@ -1,8 +1,8 @@
-// AddPostsController.js
 const { insertPost } = require('../models/AddPostsModel'); // 수정된 함수명으로 import
 
 // 게시글 작성 처리
 const addPost = async (req, res) => {
+  console.log('addPost 요청이 들어왔습니다:', req.body); // 로그 추가
   let { title, content, author, comId } = req.body;
 
   // 입력값 trim 처리
