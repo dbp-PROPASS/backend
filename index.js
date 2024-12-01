@@ -8,7 +8,9 @@ const signUpRoutes = require('./routes/signUpRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const communityRoutes = require('./routes/communityRoutes'); // 추가된 라우터
 const certificateListRouter = require('./routes/certificateListRoutes');
+const certificateInfoRoutes = require('./routes/certificateInfoRoutes');
 const findPasswordRoutes = require('./routes/findPasswordRoutes');
+const bookmarkRoutes = require('./routes/bookMarkRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,7 +32,9 @@ app.use('/api', signUpRoutes);  // 회원가입 관련 API
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api', communityRoutes); // Community API 추가
 app.use('/api/certificate', certificateListRouter);
+app.use('/api/certificate', certificateInfoRoutes);
 app.use('/api/password', findPasswordRoutes);
+app.use('/api/bookmark', bookmarkRoutes);
 
 // 서버 실행
 app.listen(PORT, () => {
