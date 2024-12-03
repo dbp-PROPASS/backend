@@ -2,6 +2,7 @@ const { getConnection } = require('../config/dbConfig');
 
 // 즐겨찾기 저장
 async function saveBookmark(mem_id, round_id) {
+
     let connection;
 
     try {
@@ -44,6 +45,7 @@ async function removeBookmark(mem_id, round_id) {
 // 즐겨찾기 중복 확인용 조회 구문
 async function checkExistingBookmark(mem_id, round_id) {
     let connection;
+
 
     try {
         connection = await getConnection();
