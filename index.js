@@ -15,6 +15,7 @@ const editProfileRoutes = require('./routes/editProfileRoutes');
 const bookmarkRoutes = require('./routes/bookMarkRoutes');
 const emailRoutes = require('./routes/emailVertificationRoutes');
 const ownCertificateRoutes = require('./routes/ownCertificateRoutes');
+const certRecoRoutes = require("./routes/certRecoRoutes"); // 자격증 추천
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,6 +44,7 @@ app.use('/api/users', editProfileRoutes);
 app.use('/api/bookmark', bookmarkRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api', ownCertificateRoutes);
+app.use("/api", certRecoRoutes); // 자격증 추천
 
 // 서버 실행
 app.listen(PORT, () => {
