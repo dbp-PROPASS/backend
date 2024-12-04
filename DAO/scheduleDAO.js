@@ -35,7 +35,7 @@ class ScheduleDAO {
 
   static async loadOwnCertifi(memId, connection) {
     const certQuery = `
-      SELECT ACQISITION_DATE, CERT_ID
+      SELECT ACQISITION_DATE, C_CERT_NAME
       FROM OWNCERTIFICATE
       WHERE TRIM(MEM_ID) = TRIM(:memId)
     `;
@@ -46,19 +46,15 @@ class ScheduleDAO {
       return [];
     }
   
-    const certIds = certResult.rows.map(row => row[1]?.trim());
-    if (!certIds.length) return [];
-  
-    const certNameMap = await ScheduleDAO.getCertificateNames(certIds, connection);
-  
-    const schedules = [];
-    certResult.rows.forEach(([acquisitionDate, certId]) => {
-      const certName = certNameMap.get(certId?.trim()) || '알 수 없는 자격증';
-      schedules.push({ certName, date: acquisitionDate?.trim(), type: 'expired' });
-    });
+    const schedules = certResult.rows.map(([acquisitionDate, certName]) => ({
+      certName: certName?.trim() || '알 수 없는 자격증',
+      date: acquisitionDate?.trim(),
+      type: 'expired',
+    }));
   
     return schedules;
-  }  
+  }
+  
 
   static async loadInterestCertifi(memId, connection) {
     const roundQuery = `
