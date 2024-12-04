@@ -2,34 +2,45 @@ const certificateInfoModel = require('../models/certificateInfoModel');
 
 async function getCertificateInfo(req, res) {
     try {
-        const certName = decodeURIComponent(req.params.certName); // URL 디코딩 추가
-        console.log("컨트롤러에서 디코딩 certName:", certName); // 디버깅 로그
+        const certName = decodeURIComponent(req.params.certName);
+        // console.log("컨트롤러에서 디코딩 certName:", certName);
 
         const result = await certificateInfoModel.getCertificateByName(certName);
-        const columnNames = result.metaData.map(col => col.name); // 메타데이터에서 열 이름 추출
 
-        // 각 row의 데이터 처리 (null 값 처리)
-        const formattedData = result.rows.map(row => {
-            const rowObject = {};
-            row.forEach((value, index) => {
-                rowObject[columnNames[index]] = value ? value.toString().trim() : null; // 열 이름과 값을 매핑
+        const columnNames = result.columnNames; // 열 이름을 메타데이터에서 가져옴
+
+        // 배열인지 객체인지 검사하여 다르게 처리
+        let formattedData = [];
+        if (Array.isArray(result.allRounds)) {
+            // 배열 처리 (리눅스 마스터와 같은 경우)
+            formattedData = result.allRounds.map(row => {
+                const rowObject = {};
+                row.forEach((value, index) => {
+                    rowObject[columnNames[index]] = value ? value.toString().trim() : null;
+                });
+                return rowObject;
             });
-            return rowObject;
-        });
-
-        if (!result || result.rows.length === 0) {
-            return res.status(404).json({ error: 'Certificate not found' });
+        } else {
+            // 객체 처리 (정보처리와 같은 경우)
+            const rowObject = {};
+            result.allRounds.forEach((value, index) => {
+                rowObject[columnNames[index]] = value ? value.toString().trim() : null;
+            });
+            formattedData.push(rowObject);
         }
-        if (!result.metaData || !Array.isArray(result.metaData)) {
-            return res.status(500).json({ error: 'Invalid data format received from database' });
-        }
+        // console.log('총 쿼리 결과:', formattedData);
 
-        res.json(formattedData[0]); // 단일 객체 반환
+        return res.json(formattedData); // 데이터 반환 시 'return' 추가
     } catch (err) {
         console.error('DB 연결 실패:', err);
-        res.status(500).json({ error: 'Server error', details: err.message, stack: err.stack });
+        // 오류가 발생한 경우 한 번만 응답
+        if (!res.headersSent) {
+            return res.status(500).json({ error: 'Server error', details: err.message, stack: err.stack });
+        }
     }
 }
+
+
 
 
 
