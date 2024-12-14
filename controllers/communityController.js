@@ -39,7 +39,7 @@ const community = async (req, res) => {
       LEFT JOIN COMMUNITYCOMMENT cmt ON p.POST_ID = cmt.POST_ID
       LEFT JOIN MEMBER cmember ON cmt.MEM_ID = cmember.MEM_ID  -- 댓글 작성자의 NICKNAME을 가져오기 위해 추가
       WHERE TRIM(p.COM_ID) = :comId
-      ORDER BY CAST(cmt.COMMENT_ID AS NUMBER) ASC
+      ORDER BY CAST(cmt.COMMENT_ID AS NUMBER) ASC, CAST(p.POST_ID AS NUMBER) DESC
     `;
 
     const result = await connection.execute(query, { comId: String(comId) });
