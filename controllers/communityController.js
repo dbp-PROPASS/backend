@@ -160,4 +160,41 @@ const addComment = async (req, res) => {
   }
 };
 
-module.exports = { community, addComment };
+const getCommentCount = async (req, res) => {
+  const { author } = req.query; // 요청에서 'author' 파라미터를 받아옵니다
+
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    const getCountCommentQuery = `
+      SELECT COUNT(c.COMMENT_ID) AS comment_count
+      FROM COMMUNITYCOMMENT c
+      JOIN MEMBER m ON c.MEM_ID = m.MEM_ID
+      WHERE m.EMAIL = :author
+    `;
+    console.log('Executing query with author:', author);  // 쿼리 실행 전 값 확인
+
+    const result = await connection.execute(getCountCommentQuery, { author });
+    console.log('Query result:', result.rows);  // 쿼리 결과 확인
+
+    const commentCount = result.rows[0][0]; // 배열에서 첫 번째 값 가져오기
+    console.log('Comment count:', commentCount);  // 댓글 개수 확인
+
+    res.json({ count: commentCount });
+  } catch (error) {
+    console.error('Error in getCommentCount:', error);  // 오류 발생 시 출력
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error closing connection:', err);  // 연결 종료 오류 추적
+      }
+    }
+  }
+};
+
+module.exports = { community, addComment, getCommentCount };
