@@ -28,7 +28,7 @@ async function getCertificateInfo(req, res) {
             });
             formattedData.push(rowObject);
         }
-        // console.log('총 쿼리 결과:', formattedData);
+        console.log('총 쿼리 결과:', formattedData);
 
         return res.json(formattedData); // 데이터 반환 시 'return' 추가
     } catch (err) {

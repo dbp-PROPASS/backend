@@ -9,16 +9,31 @@ async function getCertificates() {
       throw new Error('Failed to establish DB connection');
     }
     const result = await connection.execute(
-      `SELECT *
+      `
+      SELECT *
+      FROM (
+        SELECT 
+          ci.CERT_NAME, 
+          ci.CERT_ID, 
+          ci.CERT_ORG,     
+          ci.CATEGORY, 
+          ci.PRACTICAL_PASS_RATE,
+          ci.WRITTEN_PASS_RATE ,    
+          ci.PRACTICAL_FEE, 
+          ci.WRITTEN_FEE,
+          es.ROUND_ID, 
+          es.EXAM_TYPE,
+          es.RECEPTION_START_DATE, 
+          es.RECEPTION_FINISH_DATE, 
+          es.RESULT_DATE, 
+          es.EXAM_DATE,
+          ROW_NUMBER() OVER (PARTITION BY ci.CERT_ID ORDER BY TO_NUMBER(TRIM(es.ROUND_ID)) DESC) AS rn
         FROM CERTIFICATEINFO ci
         JOIN EXAMSCHEDULE es
-          ON ci.CERT_ID = es.CERT_ID
-        WHERE TO_NUMBER(TRIM(es.ROUND_ID)) = (
-          SELECT MAX(TO_NUMBER(TRIM(es2.ROUND_ID)))
-            FROM EXAMSCHEDULE es2
-            WHERE es2.CERT_ID = ci.CERT_ID
+          ON ci.CERT_ID = es.CERT_ID   
         )
-        ORDER BY ci.CERT_NAME
+        WHERE rn = 1
+        ORDER BY CERT_NAME
       `
     );
     return result;
