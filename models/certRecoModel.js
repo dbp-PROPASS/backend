@@ -10,7 +10,7 @@ exports.getCertsByCategory = async (category) => {
     WHERE ci.category = :category
     GROUP BY ci.cert_name
     ORDER BY COUNT(i.round_id) DESC
-    FETCH FIRST 10 ROWS ONLY
+    FETCH FIRST 5 ROWS ONLY
   `;
   
   let connection;
@@ -49,7 +49,7 @@ exports.getCertsByAgeGroup = async (age_group) => {
         WHERE TRIM(m.age_group) = :age_group
         GROUP BY ci.cert_name
         ORDER BY COUNT(i.round_id) DESC
-        FETCH FIRST 10 ROWS ONLY
+        FETCH FIRST 5 ROWS ONLY
     `;
 
     const result = await connection.execute(query, { age_group: age_group });
