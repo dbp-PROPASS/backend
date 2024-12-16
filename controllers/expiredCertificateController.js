@@ -10,7 +10,11 @@ const sendExpirationNotifications = async () => {
     for (const certificate of certificates) {
       const [email, name, certificateName, acquisitionDate] = certificate;
       const expirationDate = new Date(acquisitionDate);
+
+      expirationDate.setHours(expirationDate.getHours() + 9); // KST로 변환
       await sendExpirationEmail(email, name, certificateName, expirationDate.toISOString().split('T')[0]);
+      
+      console.log(`${expirationDate.toISOString().split('T')[0]}일에 자격증 만료`);
     }
 
     console.log('모든 만료 예정 자격증 알림 이메일 발송 완료.');
