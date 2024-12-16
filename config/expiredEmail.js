@@ -18,8 +18,8 @@ const sendExpirationEmail = async (email, name, certificateName, expirationDate)
     to: email,
     subject: "[PROPASS] 자격증 만료 예정 알림", 
     html: `
-      <h1>안녕하세요, ${name}님</h1>
-      <p>귀하의 ${certificateName} 자격증이 ${expirationDate}일에 만료됩니다.</p>
+      <h1>안녕하세요, ${name}님</h1><br>
+      <p>귀하의 ${certificateName} 자격증이 일주일 뒤인인 ${expirationDate}일에 만료됩니다.</p>
       <p>만료 일정을 확인하고 자격증 갱신을 고려해 주세요.</p>
     `,
   };
