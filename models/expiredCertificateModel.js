@@ -7,9 +7,15 @@ class ExpiredCertificateDAO {
       connection = await getConnection(); // DB 연결
 
       const today = new Date();
-      const expirationDate = new Date(today);
-      expirationDate.setDate(today.getDate() + 7); // 7일 후
+      console.log(`${today}: 오늘날짜`);
 
+      const expirationDate = new Date(today);
+      expirationDate.setDate(today.getDate() + 7); 
+      
+      expirationDate.setHours(expirationDate.getHours() + 9); 
+      console.log(`${expirationDate.toISOString().split('T')[0]}일에 자격증 만료`);
+
+      // 날짜 비교 쿼리
       const query = `
         SELECT c.EMAIL, c.NAME, o.C_CERT_NAME, o.ACQISITION_DATE
         FROM OWNCERTIFICATE o
