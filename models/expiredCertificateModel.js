@@ -21,6 +21,7 @@ class ExpiredCertificateDAO {
         FROM OWNCERTIFICATE o
         JOIN MEMBER c ON o.mem_id = c.mem_id
         WHERE TO_DATE(o.ACQISITION_DATE, 'YYYY/MM/DD') = TO_DATE(:expirationDate, 'YYYY/MM/DD')
+        AND c.NOTIFICATION = 1
       `;
 
       const result = await connection.execute(query, {
