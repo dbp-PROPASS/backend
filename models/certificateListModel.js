@@ -26,7 +26,8 @@ async function getCertificates() {
           es.RECEPTION_START_DATE, 
           es.RECEPTION_FINISH_DATE, 
           es.RESULT_DATE, 
-          es.EXAM_DATE,
+          es.EXAM_START_DATE,
+          es.EXAM_END_DATE,
           ROW_NUMBER() OVER (PARTITION BY ci.CERT_ID ORDER BY TO_NUMBER(TRIM(es.ROUND_ID)) DESC) AS rn
         FROM CERTIFICATEINFO ci
         JOIN EXAMSCHEDULE es
