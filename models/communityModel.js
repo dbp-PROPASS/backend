@@ -12,7 +12,7 @@ const getPostsAndComments = async (comId) => {
     LEFT JOIN COMMUNITYCOMMENT cmt ON p.POST_ID = cmt.POST_ID
     LEFT JOIN MEMBER cmember ON cmt.MEM_ID = cmember.MEM_ID
     WHERE TRIM(p.COM_ID) = :comId
-    ORDER BY CAST(cmt.COMMENT_ID AS NUMBER) ASC, CAST(p.POST_ID AS NUMBER) DESC
+    ORDER BY CAST(p.POST_ID AS NUMBER) DESC, CAST(cmt.COMMENT_ID AS NUMBER) ASC
   `;
 
   let connection;
