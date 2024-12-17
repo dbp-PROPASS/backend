@@ -4,16 +4,16 @@ const community = async (req, res) => {
   const { category } = req.query;
 
   const categoryToComId = {
-    it: '2',
-    english: '3',
-    finance: '4',
-    tech: '5',
-    medical: '6',
-    edu: '7',
-    design: '8',
-    food: '9',
-    architect: '10',
-    national: '11',
+    business: '2',
+    public: '3',
+    health: '4',
+    culture: '5',
+    logistics: '6',
+    industry: '7',
+    manufacturing: '8',
+    technology: '9',
+    food: '10',
+    environment: '11',
   };
   const comId = String(categoryToComId[category]);
 
