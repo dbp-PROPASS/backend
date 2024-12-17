@@ -94,7 +94,7 @@ class ScheduleDAO {
     examResult.rows.forEach(row => {
       const [roundId, startDate, finishDate, resultDate, examStartDate, examEndDate, certId, examType] = row;
       const certNameBase = certNameMap.get(certId?.trim()) || '알 수 없는 자격증';
-      const certName = `${roundId?.trim() || '알 수 없는 회차'}회 ${certNameBase} `; // 회차 정보 추가
+      const certName = `${roundId?.trim().slice(-4) || '알 수 없는 회차'}회 ${certNameBase}`;
   
       if (examType === '필기') {
         schedules.push({ certName, date: startDate?.trim(), type: 'writtenReceiveStart' });
