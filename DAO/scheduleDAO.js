@@ -73,7 +73,7 @@ class ScheduleDAO {
     if (!roundIds.length) return [];
   
     const examQuery = `
-      SELECT ROUND_ID, RECEPTION_START_DATE, RECEPTION_FINISH_DATE, RESULT_DATE, EXAM_DATE, CERT_ID, EXAM_TYPE
+      SELECT ROUND_ID, RECEPTION_START_DATE, RECEPTION_FINISH_DATE, RESULT_DATE, EXAM_START_DATE, EXAM_END_DATE, CERT_ID, EXAM_TYPE
       FROM EXAMSCHEDULE
       WHERE TRIM(ROUND_ID) IN (${roundIds.map((_, index) => `:roundId${index}`).join(', ')})
     `;
@@ -87,12 +87,12 @@ class ScheduleDAO {
       return [];
     }
   
-    const certIds = examResult.rows.map(row => row[5]?.trim());
+    const certIds = examResult.rows.map(row => row[6]?.trim());
     const certNameMap = await ScheduleDAO.getCertificateNames(certIds, connection);
   
     const schedules = [];
     examResult.rows.forEach(row => {
-      const [roundId, startDate, finishDate, resultDate, examDate, certId, examType] = row;
+      const [roundId, startDate, finishDate, resultDate, examStartDate, examEndDate, certId, examType] = row;
       const certNameBase = certNameMap.get(certId?.trim()) || '알 수 없는 자격증';
       const certName = `${roundId?.trim() || '알 수 없는 회차'}회 ${certNameBase} `; // 회차 정보 추가
   
@@ -100,12 +100,14 @@ class ScheduleDAO {
         schedules.push({ certName, date: startDate?.trim(), type: 'writtenReceiveStart' });
         schedules.push({ certName, date: finishDate?.trim(), type: 'writtenReceiveEnd' });
         schedules.push({ certName, date: resultDate?.trim(), type: 'writtenResults' });
-        schedules.push({ certName, date: examDate?.trim(), type: 'writtenExam' });
+        schedules.push({ certName, date: examStartDate?.trim(), type: 'writtenExamStart' });
+        schedules.push({ certName, date: examEndDate?.trim(), type: 'writtenExamEnd' });
       } else if (examType === '실기') {
         schedules.push({ certName, date: startDate?.trim(), type: 'practicalReceiveStart' });
         schedules.push({ certName, date: finishDate?.trim(), type: 'practicalReceiveEnd' });
         schedules.push({ certName, date: resultDate?.trim(), type: 'practicalResults' });
-        schedules.push({ certName, date: examDate?.trim(), type: 'practicalExam' });
+        schedules.push({ certName, date: examStartDate?.trim(), type: 'practicalExamStart' });
+        schedules.push({ certName, date: examEndDate?.trim(), type: 'practicalExamEnd' });
       } else {
         console.warn(`알 수 없는 시험 타입: ${examType}`);
       }
