@@ -8,7 +8,11 @@ async function getCertificateList(req, res) {
     const formattedData = result.rows.map(row => {
       const rowObject = {};
       row.forEach((value, index) => {
-        rowObject[columnNames[index]] = value.toString().trim();  // 열 이름과 값을 매핑
+          // value가 null 또는 undefined일 경우 빈 문자열로 처리
+          const safeValue = value != null ? value.toString().trim() : '';  // null 체크 후 toString 호출
+
+          // 열 이름과 값을 매핑
+          rowObject[columnNames[index]] = safeValue;
       });
       return rowObject;
     });
